@@ -7,6 +7,8 @@ services:
     container_name: flask_graphql
     ports:
       - "5001:5000" # localhost:5001
+    volumes:
+      - ./app:/app  # sync changes from host machine to docker container
     depends_on:
       - redis
     environment:
