@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    image: star_war_trivia_app_image
+    container_name: flask_graphql
+    ports:
+      - "5001:5000" # localhost:5001
+    volumes:
+      - ./app:/app  # sync changes from host machine to docker container
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  redis:
+    image: redis:latest
+    container_name: redis_db
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf  # Redis config (AOF)
+
+volumes:
+  redis_data:
