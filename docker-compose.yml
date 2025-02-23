@@ -1,8 +1,8 @@
-version: '3.8'
-
 services:
   backend:
-    build: .
+    build:
+      context: ./app
+      dockerfile: Dockerfile
     image: star_war_trivia_app_image
     container_name: flask_graphql
     ports:
@@ -14,6 +14,25 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+    networks:
+      - starwars_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: star_war_trivia_app_frontend_image
+    container_name: react_apollo_client
+    ports:
+      - "3000:3000" # localhost:3000
+    volumes:
+      - ./frontend:/frontend
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_GRAPHQL_SERVER=http://backend:5000/graphql # allows frontend visiting backend GraphQL
+    networks:
+      - starwars_network
 
   redis:
     image: redis:latest
@@ -23,6 +42,13 @@ services:
     volumes:
       - redis_data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf  # Redis config (AOF)
+    networks:
+      - starwars_network
 
 volumes:
   redis_data:
+
+networks:
+  starwars_network:
+    name: starwars_network
+    driver: bridge
