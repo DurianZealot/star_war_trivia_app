@@ -1,7 +1,6 @@
 import requests
 
-
-def search_characters_from_swapi(api, name):
+def search_characters_from_api(api, name):
     """Search characters by name from given api 
 
     Args:
@@ -149,3 +148,9 @@ def match_vehicles_w_film(character_film_vehicles):
             film_vehicles_matching[film_title] = vehicle_models_lst
         vehicles_films_dict["film_vehicle_match"] = film_vehicles_matching
     return character_film_vehicles
+
+
+def search_characters(api, name):
+    character_film_vehicles = search_characters_from_api(api, name)
+    matched_character_film_vehicles = match_vehicles_w_film(character_film_vehicles)
+    return matched_character_film_vehicles
