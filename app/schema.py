@@ -13,6 +13,7 @@ class Character(graphene.ObjectType):
 
 
 class SearchResult(graphene.ObjectType):
+    is_cached = graphene.Boolean() # True if already cached in storage
     search_key = graphene.String()
     search_results = graphene.List(Character)
 
@@ -28,7 +29,7 @@ class Query(graphene.ObjectType):
         search_result = get_search(search_key)
         if not search_result:
             # No search history
-            return SearchResult(search_key=search_key, search_results=[])
+            return SearchResult(is_cached=False, search_key=search_key, search_results=[])
 
         search_result_dict = json.loads(search_result)
         character_obj_lst = []
@@ -42,11 +43,11 @@ class Query(graphene.ObjectType):
             character_obj_lst.append(character)
 
         search_result_obj = SearchResult(
-            search_key=search_key, search_results=character_obj_lst)
+            is_cached=True, search_key=search_key, search_results=character_obj_lst)
         return search_result_obj
 
 
-class CreateSerachResult(graphene.Mutation):
+class CreateSearchResult(graphene.Mutation):
     """ Create SearchResult when given search criteria are not cached and save it into database.
     """
     class Arguments:
@@ -59,6 +60,10 @@ class CreateSerachResult(graphene.Mutation):
 
     def mutate(self, info, search_api, search_keyword):
         search_results = search_characters(search_api, search_keyword)
+        if not search_results:
+            # if fetched result is empty or any error occurs during searching externally
+            # do not save into redis 
+            return CreateSearchResult(create_at=datetime.now().date(), saved_search_result=None, save_status=False)
         # save into redis
         save_status = save_search(
             f"{search_api}{search_keyword}", json.dumps(search_results))
@@ -73,13 +78,13 @@ class CreateSerachResult(graphene.Mutation):
             )
             character_obj_lst.append(character)
         search_result_obj = SearchResult(
-            search_key=f"{search_api}{search_keyword}", search_results=character_obj_lst)
+            is_cached=True, search_key=f"{search_api}{search_keyword}", search_results=character_obj_lst)
 
-        return CreateSerachResult(create_at=datetime.now(), saved_search_result=search_result_obj, save_status=save_status)
+        return CreateSearchResult(create_at=datetime.now().date(), saved_search_result=search_result_obj, save_status=save_status)
 
 
 # Define Mutation
 class Mutation(graphene.ObjectType):
-    create_search_result = CreateSerachResult.Field()
+    create_search_result = CreateSearchResult.Field()
     
 schema = graphene.Schema(query=Query, mutation=Mutation)
