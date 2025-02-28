@@ -13,7 +13,7 @@ def search_characters_from_api(api, name):
     swapi = f"{api}{name}"
     character_film_vehicles = {}
     try:
-        response = requests.get(swapi, timeout=1)  # timeout 1s
+        response = requests.get(swapi, timeout=10)  # timeout 1s
         response.raise_for_status()
         data = response.json()
         result_count = data["count"]
@@ -26,7 +26,7 @@ def search_characters_from_api(api, name):
                     "name": character_name, "films": character_movies, "vehicles": character_vehicles}
             if data["next"] is not None:
                 try:
-                    response = requests.get(data["next"], timeout=1)
+                    response = requests.get(data["next"], timeout=10)
                     response.raise_for_status()
                     data = response.json()
                 except requests.exceptions.Timeout:
@@ -57,7 +57,7 @@ def search_vehicles_in_film(film_link, vehicles):
         List[str]: A list of all vehicles driven by one character shows in a given film 
     """
     try:
-        response = requests.get(film_link, timeout=1)  # timeout 1s
+        response = requests.get(film_link, timeout=10)  # timeout 1s
         response.raise_for_status()
         data = response.json()
         vehicles_in_film = data["vehicles"]
@@ -85,7 +85,7 @@ def get_film_title(film):
     If an HTTP error, timeout, or other request exception occurs, an error message will be printed.
     """
     try:
-        response = requests.get(film, timeout=1)  # timeout 1 seconds
+        response = requests.get(film, timeout=10)  # timeout 1 seconds
         response.raise_for_status()  # Check if the request was successful
         data = response.json()
         return data["title"]
@@ -111,7 +111,7 @@ def get_vehicle_model(vehicle):
     If an HTTP error, timeout, or other request exception occurs, an error message will be printed.
     """
     try:
-        response = requests.get(vehicle, timeout=1)  # timeout 1 seconds
+        response = requests.get(vehicle, timeout=10)  # timeout 1 seconds
         response.raise_for_status()  # Check if the request was successful
         data = response.json()
         return data["model"]
