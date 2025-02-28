@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useLazyQuery } from "@apollo/client";
-import { SEARCH_CHARACTER_IN_DB } from "./api";
+import { useLazyQuery, useMutation } from "@apollo/client";
+import { SEARCH_CHARACTER_IN_DB, SEARCH_CHARACTER_FROM_EXTERNAL_API } from "./api";
 import { TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 
 function App() {
+  
   // set searchTerm
   const searchTermState = useState('');
   const searchTerm = searchTermState[0];
@@ -38,21 +39,62 @@ function App() {
   const loading = queryState.loading;
   const error = queryState.error;
 
+  // Use mutation hook
+  const [searchExternal] = useMutation(SEARCH_CHARACTER_FROM_EXTERNAL_API);
+
   function handleSearch() {
-    const searchKeyValue = "https://swapi.dev/api/people?search=" + searchTerm;
+    const searchKeyValue = searchTerm.trim();
 
     console.log("Search input:", searchTerm);
-    console.log("Actual searchKey sent to backend:", searchKeyValue);
 
     fetchResponse({
       variables: {
-        searchKey: searchKeyValue
+        searchKey: "https://swapi.dev/api/people?search=" + searchKeyValue
       }
-    }).then(function (response) {
+    }).then(async function (response) {
       console.log("GraphQL response data:", response);
-      console.log("GraphQL query variables:", {
-        searchKey: searchKeyValue
-      });
+
+      // Check if we need to ask for external search
+      if (response.data?.getSearchHistory?.isCached === false) {
+        console.log("Cache miss, fetching from external API");
+        try {
+          const externalResponse = await searchExternal({
+            variables: {
+              searchApi: "https://swapi.dev/api/people?search=",
+              searchKeyword: searchKeyValue
+            }
+          });
+          
+          console.log("External API response:", externalResponse);
+          
+          if (externalResponse.data?.createSearchResult?.saveStatus === true) {
+            const savedResults = externalResponse.data.createSearchResult.savedSearchResult.searchResults;
+            const formattedResults = savedResults.map(character => {
+              const filmVehicleMatch = JSON.parse(character.filmVehicleMatch);
+              return {
+                name: character.name,
+                ...filmVehicleMatch
+              };
+            });
+            setResults(formattedResults);
+          }
+        } catch (error) {
+          console.error("External API error:", error);
+          console.error("GraphQL errors:", error.graphQLErrors);
+          console.error("Network error:", error.networkError);
+        }
+      } else if (response.data?.getSearchHistory?.searchResults) {
+        // use cached data
+        const searchResults = response.data.getSearchHistory.searchResults;
+        const formattedResults = searchResults.map(character => {
+          const filmVehicleMatch = JSON.parse(character.filmVehicleMatch);
+          return {
+            name: character.name,
+            ...filmVehicleMatch
+          };
+        });
+        setResults(formattedResults);
+      }
 
       if (response.error) {
         console.error("GraphQL error:", response.error);
@@ -62,9 +104,11 @@ function App() {
     });
   }
 
+
   function handleInputChange(event) {
     setSearchTerm(event.target.value);
   }
+  
 
   return (
     <div className="App" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh' }}>
