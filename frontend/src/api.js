@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 
+export const SWAPI_ENDPOINT = "https://swapi.dev/api/people?search=";
 
 export const SEARCH_CHARACTER_IN_DB = gql`
     query getSearchHistory($searchKey: String!) { 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLazyQuery, useMutation } from "@apollo/client";
-import { SEARCH_CHARACTER_IN_DB, SEARCH_CHARACTER_FROM_EXTERNAL_API } from "./api";
+import { SWAPI_ENDPOINT, SEARCH_CHARACTER_IN_DB, SEARCH_CHARACTER_FROM_EXTERNAL_API } from "./api";
 import { TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 
 function App() {
@@ -49,7 +49,7 @@ function App() {
 
     fetchResponse({
       variables: {
-        searchKey: "https://swapi.dev/api/people?search=" + searchKeyValue
+        searchKey: SWAPI_ENDPOINT + searchKeyValue
       }
     }).then(async function (response) {
       console.log("GraphQL response data:", response);
@@ -60,7 +60,7 @@ function App() {
         try {
           const externalResponse = await searchExternal({
             variables: {
-              searchApi: "https://swapi.dev/api/people?search=",
+              searchApi: SWAPI_ENDPOINT,
               searchKeyword: searchKeyValue
             }
           });
