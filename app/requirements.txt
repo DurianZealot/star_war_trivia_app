@@ -4,3 +4,5 @@ graphene
 redis
 flask-cors
 requests
+mocket
+pytest
