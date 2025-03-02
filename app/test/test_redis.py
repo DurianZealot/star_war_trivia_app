@@ -1,10 +1,10 @@
-from redis_client import get_search, save_search
-import pytest
-
 import sys
 import os
 sys.path.append(os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../')))
+
+from redis_client import get_search, save_search
+import pytest
 
 
 def test_redis_save_command():
