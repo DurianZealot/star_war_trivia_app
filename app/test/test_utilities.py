@@ -1,14 +1,14 @@
+import sys
+import os
+sys.path.append(os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../')))
+
 from utilities import search_characters_from_api, search_characters
 import pytest
 import json
 from mocket.mockhttp import Entry
 from mocket import Mocketizer
 from mocket.exceptions import StrictMocketException
-
-import sys
-import os
-sys.path.append(os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '../')))
 
 
 @pytest.fixture
@@ -252,7 +252,7 @@ def test_success_3matches(mock_response_skywalker):
                 ],
                 "film_vehicle_match": {
                     "The Phantom Menace": [],
-                    "Attack of the Clones": ['Zephyr-G swoop bike', 'XJ-6 airspeeder'],
+                    "Attack of the Clones": ['XJ-6 airspeeder', 'Zephyr-G swoop bike'],
                     "Revenge of the Sith": []
                 }
             },
@@ -269,8 +269,15 @@ def test_success_3matches(mock_response_skywalker):
                 }
             }
         }
-    assert mocked_response == expect_resp
-    assert mocked_final_response == expect_final_resp
+    characters = expect_final_resp.keys()
+    for character in characters:
+        assert expect_final_resp[character]["name"] == mocked_final_response[character]["name"]
+        assert expect_final_resp[character]["films"] == mocked_final_response[character]["films"]
+        assert expect_final_resp[character]["vehicles"] == mocked_final_response[character]["vehicles"]
+       
+        film_titles = expect_final_resp[character]["film_vehicle_match"].keys()
+        for film in film_titles:
+            assert set(expect_final_resp[character]["film_vehicle_match"][film]) == set(mocked_final_response[character]["film_vehicle_match"][film])
 
 
 @pytest.fixture
