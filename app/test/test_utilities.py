@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../')))
 
-from utilities import search_characters_from_api, search_characters
+from swapi import search_characters_from_api, search_characters
 import pytest
 import json
 from mocket.mockhttp import Entry

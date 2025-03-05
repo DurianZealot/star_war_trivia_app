@@ -1,8 +1,12 @@
 import graphene
 import json
-from utilities import search_characters
+from swapi import search_characters
 from datetime import datetime
-from redis_client import get_search, save_search
+# from redis_client import get_search, save_search
+from redis_client import RedisClient
+
+# Init a RedisClient to connect to Redis 
+RedisClientInstance = RedisClient("redis", 6379)
 
 # Star Wars character
 class Character(graphene.ObjectType):
@@ -26,7 +30,7 @@ class Query(graphene.ObjectType):
     def resolve_get_search_history(self, info, search_key):
         """ If search_key is cached, return the cached search result. If not, return an empty result.
         """
-        search_result = get_search(search_key)
+        search_result = RedisClientInstance.get_search(search_key)
         if not search_result:
             # No search history
             return SearchResult(is_cached=False, search_key=search_key, search_results=[])
@@ -65,7 +69,7 @@ class CreateSearchResult(graphene.Mutation):
             # do not save into redis 
             return CreateSearchResult(create_at=datetime.now().date(), saved_search_result=None, save_status=False)
         # save into redis
-        save_status = save_search(
+        save_status = RedisClientInstance.save_search(
             f"{search_api}{search_keyword}", json.dumps(search_results))
 
         character_obj_lst = []
