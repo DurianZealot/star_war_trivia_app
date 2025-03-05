@@ -1,6 +1,6 @@
 import graphene
 import json
-from utilities import search_characters
+from swapi import search_characters
 from datetime import datetime
 # from redis_client import get_search, save_search
 from redis_client import RedisClient
